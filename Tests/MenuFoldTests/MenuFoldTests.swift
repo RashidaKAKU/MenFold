@@ -20,6 +20,20 @@ final class MenuFoldTests: XCTestCase {
         XCTAssertEqual(first, "com.example.app|Status|0")
     }
 
+    func testWeChatNumericBadgesAreTransient() {
+        XCTAssertTrue(MenuBarItem.isTransientBadge(
+            bundleIdentifier: "com.tencent.xinWeChat",
+            ownerName: "微信",
+            windowName: " 12"
+        ))
+        XCTAssertFalse(MenuBarItem.isTransientBadge(
+            bundleIdentifier: "com.tencent.xinWeChat",
+            ownerName: "微信",
+            windowName: "微信"
+        ))
+        XCTAssertTrue(MenuBarItem.isTransientBadgeIdentifier("com.tencent.xinWeChat| 3|0"))
+    }
+
     func testPreferencesRoundTrip() throws {
         var preferences = AppPreferences()
         preferences.itemVisibility["sample"] = .hidden

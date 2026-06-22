@@ -45,7 +45,6 @@ final class AppModel: ObservableObject {
     var onItemsChanged: (([MenuBarItem]) -> Void)?
     var onPreferencesChanged: (() -> Void)?
     var onVisibilityChanged: (() -> Void)?
-    var onNewItemsDiscovered: (() -> Void)?
     var onPanelRequested: (() -> Void)?
     var onSettingsRequested: (() -> Void)?
 
@@ -56,7 +55,21 @@ final class AppModel: ObservableObject {
 
     init(store: PreferencesStore = PreferencesStore()) {
         self.store = store
-        preferences = store.load()
+        var loadedPreferences = store.load()
+        let transientIDs = Set(
+            loadedPreferences.knownItemIDs.filter(MenuBarItem.isTransientBadgeIdentifier)
+                + loadedPreferences.itemVisibility.keys.filter(MenuBarItem.isTransientBadgeIdentifier)
+                + loadedPreferences.itemGroupIDs.keys.filter(MenuBarItem.isTransientBadgeIdentifier)
+        )
+        if !transientIDs.isEmpty {
+            loadedPreferences.knownItemIDs.subtract(transientIDs)
+            for id in transientIDs {
+                loadedPreferences.itemVisibility.removeValue(forKey: id)
+                loadedPreferences.itemGroupIDs.removeValue(forKey: id)
+            }
+            store.save(loadedPreferences)
+        }
+        preferences = loadedPreferences
     }
 
     var collapsedItems: [MenuBarItem] {
@@ -160,14 +173,13 @@ final class AppModel: ObservableObject {
             scanMessage = "扫描完成，共识别 \(result.items.count) 个菜单栏项目"
         }
         let scanned = result.items
-        let shouldArrangeNewItems = classifyNewItems(in: scanned)
+        classifyNewItems(in: scanned)
         guard scanned != items else { return }
         items = scanned
         onItemsChanged?(scanned)
-        if shouldArrangeNewItems { onNewItemsDiscovered?() }
     }
 
-    private func classifyNewItems(in scanned: [MenuBarItem]) -> Bool {
+    private func classifyNewItems(in scanned: [MenuBarItem]) {
         let currentIDs = Set(scanned.map(\.id))
         if preferences.knownItemIDs.isEmpty {
             for item in scanned where storedVisibility(for: item) == nil {
@@ -175,17 +187,16 @@ final class AppModel: ObservableObject {
             }
             preferences.knownItemIDs = currentIDs
             store.save(preferences)
-            return false
+            return
         }
 
         let newItems = scanned.filter { !preferences.knownItemIDs.contains($0.id) }
-        guard !newItems.isEmpty else { return false }
+        guard !newItems.isEmpty else { return }
         for item in newItems {
             preferences.itemVisibility[item.id] = item.isMovable ? .collapsed : .visible
         }
         preferences.knownItemIDs.formUnion(currentIDs)
         store.save(preferences)
-        return newItems.contains(where: \.isMovable)
     }
 
     func visibility(for item: MenuBarItem) -> ItemVisibility {

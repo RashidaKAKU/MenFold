@@ -18,6 +18,17 @@ enum SelfTest {
         )
         precondition(first == "com.example.app|Status|0")
         precondition(first != second)
+        precondition(MenuBarItem.isTransientBadge(
+            bundleIdentifier: "com.tencent.xinWeChat",
+            ownerName: "微信",
+            windowName: " 12"
+        ))
+        precondition(!MenuBarItem.isTransientBadge(
+            bundleIdentifier: "com.tencent.xinWeChat",
+            ownerName: "微信",
+            windowName: "微信"
+        ))
+        precondition(MenuBarItem.isTransientBadgeIdentifier("com.tencent.xinWeChat| 3|0"))
 
         var preferences = AppPreferences()
         preferences.itemVisibility["sample"] = .hidden

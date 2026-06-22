@@ -213,6 +213,7 @@ struct SettingsView: View {
             subtitle: "始终显示保留原图标；折叠会放入下方展开栏；彻底隐藏不会出现在展开栏。"
         ) {
             VStack(spacing: 12) {
+                MenuBarUsageTip()
                 ScanStatusCard(model: model)
 
                 HStack {
@@ -248,6 +249,37 @@ struct SettingsView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+private struct MenuBarUsageTip: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("菜单栏图标说明", systemImage: "info.circle.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.tint)
+
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "chevron.left.2")
+                    .frame(width: 24, height: 20)
+                Text("菜单栏最左侧的折叠标记仅用于遮罩和划分隐藏区域，无需点击。")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "rectangle.3.group")
+                    .frame(width: 24, height: 20)
+                Text("请点击 MenuFold 软件图标打开或关闭折叠抽屉。")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .font(.caption)
+        .padding(12)
+        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 11))
+        .overlay {
+            RoundedRectangle(cornerRadius: 11)
+                .stroke(Color.accentColor.opacity(0.25), lineWidth: 1)
         }
     }
 }

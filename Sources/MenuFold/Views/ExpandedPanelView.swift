@@ -27,6 +27,13 @@ struct ExpandedPanelView: View {
                 DashboardView(metrics: model.metrics)
             }
 
+            Label(
+                "最左侧折叠标记是遮罩；请点击 MenuFold 软件图标打开本抽屉。",
+                systemImage: "info.circle"
+            )
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+
             if model.collapsedItems.isEmpty {
                 ContentUnavailableView(
                     "折叠栏是空的",

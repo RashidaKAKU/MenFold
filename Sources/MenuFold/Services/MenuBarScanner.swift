@@ -109,9 +109,12 @@ struct MenuBarScanner {
             let ownerName = (info[kCGWindowOwnerName as String] as? String) ?? "未知项目"
             let windowName = (info[kCGWindowName as String] as? String) ?? ""
             let layerValue = layer.intValue
+            let app = runningApps[pid]
             let rejection = windowRejectionReason(
                 pid: pid,
                 ownerName: ownerName,
+                bundleIdentifier: app?.bundleIdentifier,
+                windowName: windowName,
                 bounds: bounds,
                 layer: layerValue,
                 statusLevel: statusLevel
@@ -130,7 +133,6 @@ struct MenuBarScanner {
                 continue
             }
 
-            let app = runningApps[pid]
             candidates.append(Candidate(
                 windowID: CGWindowID(windowNumber.uint32Value),
                 ownerPID: pid,
@@ -194,6 +196,22 @@ struct MenuBarScanner {
                     keys: [kAXTitleAttribute, kAXDescriptionAttribute, kAXHelpAttribute]
                 )
                 let ownerName = app.localizedName ?? app.bundleIdentifier ?? "未知项目"
+                if MenuBarItem.isTransientBadge(
+                    bundleIdentifier: app.bundleIdentifier,
+                    ownerName: ownerName,
+                    windowName: name
+                ) {
+                    entries.append(ScanDiagnosticEntry(
+                        source: .accessibility,
+                        ownerName: ownerName,
+                        itemName: name,
+                        layer: nil,
+                        bounds: bounds,
+                        accepted: false,
+                        reason: "应用消息角标，不是独立菜单栏项目"
+                    ))
+                    continue
+                }
                 candidates.append(Candidate(
                     windowID: 0,
                     ownerPID: pid,
@@ -294,6 +312,8 @@ struct MenuBarScanner {
     private func windowRejectionReason(
         pid: pid_t,
         ownerName: String,
+        bundleIdentifier: String?,
+        windowName: String,
         bounds: CGRect,
         layer: Int,
         statusLevel: Int
@@ -301,6 +321,13 @@ struct MenuBarScanner {
         if pid == ownPID { return "MenuFold 自身项目" }
         if ownerName == "Window Server" || ownerName == "Dock" || ownerName == "程序坞" {
             return "系统菜单栏背景或程序坞窗口"
+        }
+        if MenuBarItem.isTransientBadge(
+            bundleIdentifier: bundleIdentifier,
+            ownerName: ownerName,
+            windowName: windowName
+        ) {
+            return "应用消息角标，不是独立菜单栏项目"
         }
         if bounds.width < 8 || bounds.width > 320 || bounds.height < 12 || bounds.height > 64 {
             return "尺寸不像独立菜单栏项目"

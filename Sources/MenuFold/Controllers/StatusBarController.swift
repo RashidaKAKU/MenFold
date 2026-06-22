@@ -101,10 +101,6 @@ final class StatusBarController: NSObject {
             guard let self else { return }
             self.sectionManager.scheduleReconcile(model: self.model)
         }
-        model.onNewItemsDiscovered = { [weak self] in
-            guard let self else { return }
-            self.sectionManager.scheduleReconcile(model: self.model)
-        }
         model.onPanelRequested = { [weak self] in self?.togglePanel() }
         model.onSettingsRequested = { [weak self] in self?.openSettingsFlow() }
     }

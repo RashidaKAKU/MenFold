@@ -75,6 +75,27 @@ struct MenuBarItem: Identifiable, Hashable {
         return "\(owner)|\(item)|\(occurrence)"
     }
 
+    static func isTransientBadge(
+        bundleIdentifier: String?,
+        ownerName: String,
+        windowName: String
+    ) -> Bool {
+        let owner = "\(bundleIdentifier ?? "") \(ownerName)".lowercased()
+        guard owner.contains("wechat") || owner.contains("微信") else { return false }
+        let label = windowName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !label.isEmpty && label.allSatisfy { $0.isNumber }
+    }
+
+    static func isTransientBadgeIdentifier(_ identifier: String) -> Bool {
+        let parts = identifier.split(separator: "|", omittingEmptySubsequences: false)
+        guard parts.count >= 3 else { return false }
+        return isTransientBadge(
+            bundleIdentifier: String(parts[0]),
+            ownerName: "",
+            windowName: String(parts[1])
+        )
+    }
+
     static func == (lhs: MenuBarItem, rhs: MenuBarItem) -> Bool {
         lhs.id == rhs.id && lhs.windowID == rhs.windowID && lhs.bounds == rhs.bounds
     }
